@@ -415,6 +415,18 @@ function recordCorrectIfTracked(q){
 }
 function removeMistake(id){ if(MISTAKE_BANK.items[id]){ delete MISTAKE_BANK.items[id]; saveMistakeBank(MISTAKE_BANK); } }
 
+// ====================== Constants ======================
+const SCHOOL_DAYS = 200;
+const WEEKS = 40;
+const EN_WRITING_PROMPTS = [
+  "Write an email to your form teacher to explain why you missed homework (120–150 words).",
+  "Write a paragraph about a habit you want to improve. Use Point–Example–Explanation.",
+  "Write a story that begins with: “I did not expect the message to change my day.”",
+  "Write an email to the vice-principal suggesting one school activity to help Sec 1 students make friends.",
+  "Write a description of a place you like in your neighbourhood.",
+  "Write a paragraph arguing whether students should have less homework."
+];
+
 // ====================== G1 MATH CURRICULUM (Practical) ======================
 const MATH_MODULES = [
   {name:"G1: Practical Arithmetic (Money/Time)"}, 
@@ -447,10 +459,8 @@ function genMathDaily(r, weekIndex, dayOfWeek, dayIndex){
     
     const a = randInt(r,15,35); const b = randInt(r,5,15);
     add({id:`${idPrefix}Q3`, type:"number", prompt:`3) Calculate: ${a} - ${b} + 10 =`, answer:a-b+10});
-    add({id:`${idPrefix}Q4`, type:"number", prompt:`4) Round ${randInt(r,1234,9876)} to the nearest 100.`, answer:Math.round(randInt(r,1234,9876)/100)*100}); // Error in logic fixed in prompt usage
     const rNum = randInt(r,1234,9876);
-    qs[qs.length-1].prompt = `4) Round ${rNum} to the nearest 100.`;
-    qs[qs.length-1].answer = Math.round(rNum/100)*100;
+    add({id:`${idPrefix}Q4`, type:"number", prompt:`4) Round ${rNum} to the nearest 100.`, answer:Math.round(rNum/100)*100});
   }
   else if(moduleIndex===1){ // Fractions Decimals (G1)
     const top = randInt(r,1,3); const bot = 4;
@@ -458,10 +468,8 @@ function genMathDaily(r, weekIndex, dayOfWeek, dayIndex){
     const d1 = randInt(r,1,9)/10; const d2 = randInt(r,1,9)/10;
     add({id:`${idPrefix}Q2`, type:"number", prompt:`2) ${d1} + ${d2} =`, answer:d1+d2});
     add({id:`${idPrefix}Q3`, type:"mcq", prompt:"3) Which is smaller?", options:[{value:"A",label:"0.5"},{value:"B",label:"0.05"},{value:"C",label:"0.55"}], ans:"B"});
-    add({id:`${idPrefix}Q4`, type:"number", prompt:`4) 1/2 of ${randInt(r,10,100)*2} is:`, answer:100}); // placeholder logic
     const val = randInt(r,10,100)*2;
-    qs[qs.length-1].prompt = `4) 1/2 of ${val} is:`;
-    qs[qs.length-1].answer = val/2;
+    add({id:`${idPrefix}Q4`, type:"number", prompt:`4) 1/2 of ${val} is:`, answer:val/2});
   }
   else if(moduleIndex===2){ // Ratio (Recipe)
     const flour = randInt(r,100,500); const sugar = randInt(r,50,200);
@@ -596,14 +604,214 @@ function genScienceDaily(r, weekIndex, dayOfWeek, dayIndex){
 }
 
 // ====================== English/Chinese G2 Generators ======================
-// (Using the Expanded Logic from previous version, suitable for G2)
-// English: Grammar + Reading + Editing
-// Chinese: Vocab + Reading + Sentences (A/B/C sets)
+function genEnglishGrammarMCQ(r, idx){
+  const t = idx % 12;
+  if(t===0){
+    const verb = ["go","eat","play","visit","finish","see","take","drive"][Math.floor(r()*8)];
+    const past = {go:"went",eat:"ate",play:"played",visit:"visited",finish:"finished",see:"saw",take:"took",drive:"drove"}[verb];
+    return createRandomMCQ(r, `Choose the correct verb: Yesterday, I ____ to the park.`, past, [verb, verb+"s", verb+"ing"]);
+  }
+  if(t===1){ return createRandomMCQ(r, `Subject-verb agreement: The list of items ____ on the table.`, "is", ["are", "were", "have"]); }
+  if(t===2){ return createRandomMCQ(r, `Preposition: Please arrive ____ time.`, "on", ["in", "at", "to"]); }
+  if(t===3){ return createRandomMCQ(r, `Quantifiers: I only have ____ friends in this class, but they are kind.`, "a few", ["few", "much", "little"]); }
+  if(t===4){ return createRandomMCQ(r, `Tense: By the time we arrived, the lesson ____ .`, "had started", ["starts", "started", "will start"]); }
+  if(t===5){ return createRandomMCQ(r, `Vocabulary: The instructions were clear, so we could ____ them easily.`, "follow", ["flow", "fold", "fail"]); }
+  if(t===6){ return createRandomMCQ(r, `Punctuation: Choose the correct sentence.`, "However, I still tried my best.", ["However I still, tried my best.", "However I, still tried my best.", "However, I still tried, my best."]); }
+  if(t===7){ return createRandomMCQ(r, `Linking word: I wanted to join the club; ____ , I had to attend tuition.`, "however", ["because", "therefore", "if"]); }
+  if(t===8){ return createRandomMCQ(r, `Pronoun: Each student must bring ____ own water bottle.`, "their", ["his", "her", "them"]); }
+  if(t===9){ return createRandomMCQ(r, `Adverbs: She studies ____ than before.`, "more carefully", ["more careful", "most careful", "careful"]); }
+  if(t===10){ return createRandomMCQ(r, `Article: He bought ____ umbrella because it was raining.`, "an", ["a", "the", "no article"]); }
+  return createRandomMCQ(r, `Reported speech: She said that she ____ tired.`, "was", ["is", "are", "be"]);
+}
 
-// ... [Keep genEnglishGrammarMCQ, genEnglishReading, genEnglishEditing unchanged as they fit G2] ...
-// ... [Keep genChineseVocabMCQ, genChineseReading, genChineseSentenceAndRhetoric unchanged as they fit G2] ...
+function genEnglishReading(r){
+  const names = ["Aiden","Mina","Kai","Sofia","Noah","Amelia","Ethan","Chloe","Ryan","Hannah"];
+  const places = ["the library","the science lab","the school hall","the classroom","the canteen","the garden"];
+  const tasks = ["a group presentation","a science report","a history poster","a class speech","a math revision plan"];
+  const issues = [
+    {line:"kept postponing the work until the last minute"},
+    {line:"felt nervous about speaking in front of others"},
+    {line:"misread the instructions and started the wrong task"},
+    {line:"kept checking messages and lost focus"},
+    {line:"could not agree with teammates on a clear plan"}
+  ];
+  const solutions = [
+    {line:"made a simple checklist and ticked off one step at a time"},
+    {line:"used a 25-minute timer to stay focused, then took a short break"},
+    {line:"asked the teacher for feedback and improved the work"},
+    {line:"practised aloud twice and became more confident"},
+    {line:"wrote a clear plan with headings and small goals"}
+  ];
+  const vocab = [
+    {word:"relieved", correct:"felt less worried", distract:["felt angry","felt hungry","felt bored"]},
+    {word:"careful", correct:"paying attention to details", distract:["very lucky","very noisy","very fast"]},
+    {word:"effective", correct:"working well", distract:["very expensive","very slow","very small"]},
+    {word:"confident", correct:"sure of oneself", distract:["confused","sleepy","careless"]}
+  ];
 
-// Re-inserting the functions for completeness
+  const name = choice(r, names);
+  const place = choice(r, places);
+  const task = choice(r, tasks);
+  const issue = choice(r, issues);
+  const sol = choice(r, solutions);
+  const v = choice(r, vocab);
+
+  // Template A
+  if(r() > 0.5){
+    const passage = `${name} had a busy week in Secondary One. The group was supposed to complete ${task}, but ${name} ${issue.line}. On Wednesday, they met at ${place} and realised they had little time left.\n\nInstead of blaming others, ${name} decided to change the approach. ${name} ${sol.line}. The group divided roles and focused on clear points. By Friday, they had a neat draft. ${name} felt ${v.word} because the team finally knew what to say.\n\nAfter the presentation, the teacher praised the group for being organised. ${name} learned that good results come from starting early and improving one small part each day.`;
+    const q1 = createRandomMCQ(r, `1) What was the main problem at the start?`, `${name} ${issue.line}.`, ["No one wanted to work with the group.", `${name} skipped school every day.`, "The teacher did the project for them."]);
+    const q2 = createRandomMCQ(r, `2) Which action helped most?`, `${name} ${sol.line}.`, ["Ignoring the instructions", "Stopping all meetings", "Waiting for the deadline"]);
+    const q3 = createRandomMCQ(r, `3) What lesson did ${name} learn?`, "Steady progress and organisation help.", ["Rushing at the end is best.", "Instructions are unimportant.", "Group work always fails."]);
+    const q4 = createRandomMCQ(r, `4) “${v.word}” is closest in meaning to:`, v.correct, v.distract);
+    return { passage, questions:[q1,q2,q3,q4] };
+  } else {
+    // Template B
+    const passage = `It was a hot afternoon at ${place}. ${name} was staring at ${task}, feeling completely stuck. The problem was that ${name} ${issue.line}. Time was ticking away.\n\nTaking a deep breath, ${name} remembered some advice from a senior. ${name} ${sol.line}. Slowly, things started to make sense. The panic faded, and ${name} felt ${v.word}.\n\nBy the end of the day, the work was done. It wasn't perfect, but it was honest effort.`;
+    const q1 = createRandomMCQ(r, `1) Why was ${name} stuck initially?`, `Because ${name} ${issue.line}.`, ["Because the room was too cold.", "Because the teacher was angry.", "Because the computer broke."]);
+    const q2 = createRandomMCQ(r, `2) How did ${name} overcome the block?`, `${name} ${sol.line}.`, ["By going to sleep.", "By asking someone else to do it.", "By giving up."]);
+    const q3 = createRandomMCQ(r, `3) How did ${name} feel in the end?`, v.correct, v.distract);
+    const q4 = createRandomMCQ(r, `4) The story suggests that:`, "Calm application of a method helps.", ["Panic is useful.", "Seniors give bad advice.", "Homework is useless."]);
+    return { passage, questions:[q1,q2,q3,q4] };
+  }
+}
+
+function genEnglishEditing(r){
+  const who = choice(r, ["my class","our team","my group","the students"]);
+  const place = choice(r, ["the library","the computer lab","the school hall","the garden"]);
+  
+  if(r() > 0.5){
+    const paragraph = `Editing passage (4 errors):\n(1) Yesterday, ${who} go to ${place} for a project.\n(2) Our teacher tell us to choose a topic carefully.\n(3) The librarian reminded us to return books by time.\n(4) In the end, we finish our work and left happily.`;
+    const items = [
+      {no:1, wrong:"go", ans:"went", distract:["go", "goes", "going"]},
+      {no:2, wrong:"tell", ans:"told", distract:["tell", "tells", "telling"]},
+      {no:3, wrong:"by time", ans:"on time", distract:["in time", "at time", "for time"]},
+      {no:4, wrong:"finish", ans:"finished", distract:["finish", "finishes", "finishing"]},
+    ];
+    return { paragraph, questions: items.map(it => createRandomMCQ(r, `Editing ${it.no}) Replace “${it.wrong}” with:`, it.ans, it.distract)) };
+  } else {
+    const p2 = `Editing passage (4 errors):\n(1) Last week, ${who} visited ${place} to learn about nature.\n(2) We see many interesting plants there.\n(3) One student pick a flower, but the teacher said no.\n(4) We must looked after our environment.\n(5) It was a educated trip.`;
+    const items = [
+      {no:2, wrong:"see", ans:"saw", distract:["seeing", "seen", "sees"]},
+      {no:3, wrong:"pick", ans:"picked", distract:["picking", "picks", "peck"]},
+      {no:4, wrong:"looked", ans:"look", distract:["looking", "looks", "look's"]},
+      {no:5, wrong:"educated", ans:"educational", distract:["education", "educate", "educating"]},
+    ];
+    return { paragraph: p2, questions: items.map(it => createRandomMCQ(r, `Editing ${it.no}) Replace “${it.wrong}” with:`, it.ans, it.distract)) };
+  }
+}
+
+function genChineseVocabMCQ(r, idx){
+  const bank = [
+    { stem:"选择最恰当的词语：他做事很____，很少因为粗心而失误。", options:[["A","细菌"],["B","细小"],["C","细心"],["D","细雨"]], ans:"C" },
+    { stem:"选择最恰当的关联词：我想参加比赛，____ 我还要照顾弟弟，只能放弃。", options:[["A","因此"],["B","因为"],["C","虽然"],["D","不过"]], ans:"B" },
+    { stem:"选择最恰当的词语：老师的讲解很____，大家一下就明白了。", options:[["A","清凉"],["B","清晰"],["C","清淡"],["D","清洁"]], ans:"B" },
+    { stem:"选择最恰当的词语：他总是把作业____到很晚才做。", options:[["A","拖延"],["B","推动"],["C","拖地"],["D","拖鞋"]], ans:"A" },
+    { stem:"选择最恰当的词语：完成任务后，他感到很____。", options:[["A","焦虑"],["B","轻松"],["C","冷淡"],["D","勉强"]], ans:"B" },
+    { stem:"选择最恰当的词语：我们应该____环境，不乱丢垃圾。", options:[["A","保护"],["B","爱慕"],["C","爱戴"],["D","爱好"]], ans:"A" },
+    { stem:"选择最恰当的成语：他做事不急不躁，____，所以很少出错。", options:[["A","马马虎虎"],["B","一丝不苟"],["C","不知所措"],["D","手忙脚乱"]], ans:"B" },
+    { stem:"选择最恰当的词语：他在讨论时很____地提出建议。", options:[["A","勇敢"],["B","鲁莽"],["C","冷淡"],["D","敷衍"]], ans:"A" },
+    { stem:"做题前先读清题目，可以避免____。", options:[["A","失误"],["B","失踪"],["C","失望"],["D","失败"]], ans:"A" },
+    { stem:"他把资料____出来后，马上整理成笔记。", options:[["A","搜寻"],["B","消失"],["C","休息"],["D","修饰"]], ans:"A" },
+    // NEW ITEMS (Expansion to 40+)
+    { stem:"遇到困难时，我们要____面对，不能退缩。", options:[["A","勇敢"],["B","凶狠"],["C","慌张"],["D","愤怒"]], ans:"A" },
+    { stem:"经过老师的____，他终于解开了这道难题。", options:[["A","启发"],["B","出发"],["C","发扬"],["D","发生"]], ans:"A" },
+    { stem:"听到这个好消息，大家都____地跳了起来。", options:[["A","兴奋"],["B","愤怒"],["C","悲伤"],["D","沉重"]], ans:"A" },
+    { stem:"这个计划非常____，没有任何漏洞。", options:[["A","周密"],["B","周全"],["C","周围"],["D","周期"]], ans:"A" },
+    { stem:"我们要养成____节约的好习惯。", options:[["A","勤俭"],["B","勤劳"],["C","勤快"],["D","辛苦"]], ans:"A" },
+    { stem:"他虽然成绩好，但从不____，依然很谦虚。", options:[["A","骄傲"],["B","矫健"],["C","娇气"],["D","焦急"]], ans:"A" },
+    { stem:"这座桥梁的设计非常____。", options:[["A","独特"],["B","单独"],["C","唯独"],["D","孤独"]], ans:"A" },
+    { stem:"大家要____守时，不要迟到。", options:[["A","严格"],["B","严重"],["C","严肃"],["D","严厉"]], ans:"A" },
+    { stem:"由于准备不充分，这次演出____了。", options:[["A","失败"],["B","失去"],["C","失落"],["D","消失"]], ans:"A" },
+    { stem:"我们应该____老人的意见。", options:[["A","尊重"],["B","庄重"],["C","严重"],["D","贵重"]], ans:"A" },
+    { stem:"如果不注意卫生，很容易____疾病。", options:[["A","传染"],["B","传送"],["C","传说"],["D","传统"]], ans:"A" },
+    { stem:"他这种助人为乐的精神值得我们____。", options:[["A","表扬"],["B","表演"],["C","表情"],["D","表面"]], ans:"A" },
+    { stem:"遇到火灾时，保持____非常重要。", options:[["A","冷静"],["B","冷淡"],["C","冷漠"],["D","寒冷"]], ans:"A" },
+    { stem:"这本书的内容很____，适合初学者。", options:[["A","浅显"],["B","浅薄"],["C","深奥"],["D","深刻"]], ans:"A" },
+    { stem:"我们要____各种资源，不要浪费。", options:[["A","珍惜"],["B","可惜"],["C","珍贵"],["D","爱惜"]], ans:"A" },
+    { stem:"他____地看着窗外，不知道在想什么。", options:[["A","呆呆"],["B","悄悄"],["C","狠狠"],["D","慢慢"]], ans:"A" },
+    { stem:"这个问题很____，需要多花时间思考。", options:[["A","复杂"],["B","杂乱"],["C","复习"],["D","重复"]], ans:"A" },
+    { stem:"他____要取得好成绩，所以每天都很努力。", options:[["A","决心"],["B","决定"],["C","决战"],["D","解决"]], ans:"A" },
+    { stem:"即使失败了，也不要____，要继续努力。", options:[["A","气馁"],["B","生气"],["C","甚至"],["D","断气"]], ans:"A" },
+    { stem:"我们要____大自然，与动物和平共处。", options:[["A","爱护"],["B","爱戴"],["C","喜爱"],["D","爱人"]], ans:"A" }
+  ];
+  return shuffleBankItem(r, bank[idx % bank.length]);
+}
+
+function genChineseReading(r){
+  const names = ["阿明","小慧","俊杰","欣怡","子轩","佳宁"];
+  const scenes = ["图书馆","科学实验室","教室","操场边","自习室"];
+  const problems = [
+    "总是把作业拖到很晚才做",
+    "常常因为粗心漏看题目条件",
+    "写作业时一直看手机，难以专注",
+    "上台发言时很紧张，声音很小",
+    "复习时不知道先做什么，越想越乱"
+  ];
+  const actions = [
+    "制定时间表，把任务分成小步骤",
+    "做了错题本，每次订正都写出错因",
+    "每天用两分钟复述当天学到的重点",
+    "遇到不懂就先标记，再向老师请教",
+    "完成目标后再奖励自己休息十分钟"
+  ];
+  const keyWord = choice(r, ["建议","效率","习惯","专注","整理"]);
+  const name = choice(r, names);
+  const scene = choice(r, scenes);
+  const prob = choice(r, problems);
+  const act = choice(r, actions);
+
+  const passage = `${name}升上中一后，发现功课变多了。在${scene}里，他（她）常常${prob}，结果第二天上课精神不佳。一次小测验后，班主任给了一个${keyWord}：先把任务写下来，再按重要程度安排。\n\n${name}开始尝试${act}。刚开始并不容易，但坚持一段时间后，他（她）发现自己做题更快，心里也更踏实。最明显的变化是：他（她）不再一边做题一边走神，而是能专心完成。\n\n${name}明白：进步不是一夜之间发生的，而是每天把小事做好。`;
+
+  const q1 = createRandomMCQ(r, "1) 这篇短文主要想表达什么？", 
+    "好习惯与规划能提高学习表现。", 
+    ["功课多就一定会失败。", "图书馆比教室更好。", "小测验没有意义。"]
+  );
+  
+  const q2 = createRandomMCQ(r, "2) 班主任给的建议是什么？", 
+    "先写下任务，再按重要程度安排。", 
+    ["每天不需要复习。", "只做喜欢的科目。", "遇到困难就放弃。"]
+  );
+  
+  const q3 = createRandomMCQ(r, `3) 从短文可以推断，${name}后来最大的改变是：`, 
+    "更专注、更踏实。", 
+    ["不再去"+scene+"。", "开始讨厌学习。", "只想玩手机。"]
+  );
+
+  const q4 = createRandomMCQ(r, `4) 文中“${keyWord}”最接近的意思是：`, 
+    "提醒/方法", 
+    ["惩罚", "借口", "玩笑"]
+  );
+
+  return { passage, questions:[q1,q2,q3,q4] };
+}
+
+function genChineseSentenceAndRhetoric(r){
+  const setA = [
+    { stem:"1) 下列哪一句是修改正确的？（原句：通过这次活动，使我学到了很多。）", options:[["A","通过这次活动，使我学到了很多。"],["B","通过这次活动，我学到了很多。"],["C","通过这次活动，使学到了很多我。"],["D","通过这次活动，很多我学到了。"]], ans:"B" },
+    { stem:"2) 下列哪一句语病最少/更通顺？", options:[["A","他把作业做完了以后，就马上立刻回家。"],["B","他把作业做完了以后，就回家。"],["C","他把作业做完了以后，就马上回家立刻。"],["D","他把作业做完了以后，就马上立刻马上回家。"]], ans:"B" },
+    { stem:"3) 判断修辞：『月亮像银盘一样挂在天空。』", options:[["A","比喻"],["B","拟人"],["C","排比"],["D","夸张"]], ans:"A" },
+    { stem:"4) 判断修辞：『风儿轻轻地唱着歌。』", options:[["A","比喻"],["B","拟人"],["C","排比"],["D","夸张"]], ans:"B" }
+  ];
+  
+  const setB = [
+    { stem:"1) 修改病句：『随地吐痰的人，是一种不文明的习惯。』", options:[["A","随地吐痰，是一种不文明的习惯。"],["B","随地吐痰的人，是不文明的习惯。"],["C","随地吐痰的人，是一种习惯。"],["D","习惯是随地吐痰的人。"]], ans:"A" },
+    { stem:"2) 选出没有语病的一句：", options:[["A","我断定他大概已经回家了。"],["B","我断定他已经回家了。"],["C","大概他断定已经回家了。"],["D","断定回家大概是他。"]], ans:"B" },
+    { stem:"3) 判断修辞：『飞流直下三千尺，疑是银河落九天。』", options:[["A","夸张"],["B","比喻"],["C","拟人"],["D","排比"]], ans:"A" },
+    { stem:"4) 判断修辞：『这里的人们勤劳、勇敢、善良。』", options:[["A","排比"],["B","比喻"],["C","夸张"],["D","设问"]], ans:"A" }
+  ];
+
+  const setC = [
+    { stem:"1) 修改病句：『菜园里种着西红柿、黄瓜、西瓜和蔬菜。』", options:[["A","菜园里种着西红柿、黄瓜和西瓜。"],["B","菜园里种着西红柿、黄瓜、西瓜和蔬菜。"],["C","菜园里种着蔬菜。"],["D","菜园里种着西红柿和蔬菜。"]], ans:"A" },
+    { stem:"2) 选出语序正确的一句：", options:[["A","我们讨论并听取了校长的报告。"],["B","我们听取并讨论了校长的报告。"],["C","我们听取了讨论校长的报告。"],["D","我们报告了校长的讨论。"]], ans:"B" },
+    { stem:"3) 判断修辞：『危楼高百尺，手可摘星辰。』", options:[["A","夸张"],["B","拟人"],["C","排比"],["D","比喻"]], ans:"A" },
+    { stem:"4) 判断修辞：『小草偷偷地从土里钻出来。』", options:[["A","拟人"],["B","比喻"],["C","夸张"],["D","设问"]], ans:"A" }
+  ];
+
+  const sets = [setA, setB, setC];
+  const chosen = choice(r, sets);
+  return chosen.map(item => shuffleBankItem(r, item));
+}
+
 function genEnglishDaily(r, weekIndex, dayOfWeek, dayIndex){
   const qs = [];
   const dayId = `D${String(dayIndex).padStart(3,"0")}`;
@@ -864,7 +1072,6 @@ function render(){
   loadAnswers(); refreshAnswerBlocks(); refreshModelVisibility(); updateStats(); renderMistakeBankUI();
 }
 
-// ... [getUserAnswer, setUserAnswer, checkOne, checkAll, updateStats, saveAnswers, loadAnswers, resetCurrent, flash - Standard Implementation] ...
 function getUserAnswer(q){ if(q.type==="mcq"){ const el=document.querySelector(`input[name="opt_${q.id}"]:checked`); return el?el.value:""; } const el=document.querySelector(`[data-input="${q.id}"]`); return el?el.value:""; }
 function setUserAnswer(q,v){ if(q.type==="mcq"){ const el=document.querySelector(`input[name="opt_${q.id}"][value="${v}"]`); if(el) el.checked=true; } else { const el=document.querySelector(`[data-input="${q.id}"]`); if(el) el.value=v; } }
 function refreshModelVisibility(){ 
@@ -904,6 +1111,52 @@ function updateStats(forced){
   let graded=forced?.graded||0, correct=forced?.correct||0;
   if(!forced){ set.questions.forEach(q=>{ const el=document.querySelector(`[data-result="${q.id}"]`); if(el&&el.style.display!=="none"&&!el.classList.contains("warn")){ graded++; if(el.classList.contains("good")) correct++; } }); }
   stats.innerHTML = `<span class="pill">Correct: ${correct}/${graded}</span>`;
+}
+
+// Missing functions restored here:
+function saveAnswers(){
+  const {subjKey, setKey, set} = getCurrent();
+  const data = {};
+  set.questions.forEach(q=>{ data[q.id] = getUserAnswer(q); });
+  localStorage.setItem(storageKey(subjKey, setKey), JSON.stringify(data));
+  flash("Progress saved locally.");
+}
+
+function loadAnswers(){
+  const {subjKey, setKey, set} = getCurrent();
+  const raw = localStorage.getItem(storageKey(subjKey, setKey));
+  if(!raw) return;
+  try{
+    const data = JSON.parse(raw);
+    set.questions.forEach(q=>{
+      if(data[q.id] !== undefined) setUserAnswer(q, data[q.id]);
+    });
+  }catch(e){}
+}
+
+function resetCurrent(){
+  const {subjKey, setKey, set} = getCurrent();
+  localStorage.removeItem(storageKey(subjKey, setKey));
+  set.questions.forEach(q=>{
+    setUserAnswer(q, "");
+    const resEl = document.querySelector(`[data-result="${q.id}"]`);
+    if(resEl){
+      resEl.style.display = "none";
+      resEl.classList.remove("good","bad","warn");
+      resEl.textContent = "";
+    }
+  });
+  updateStats();
+  flash("This set has been reset.");
+}
+
+function flash(msg){
+  const el = document.createElement("div");
+  el.className = "pill";
+  el.style.marginTop = "10px";
+  el.innerHTML = `<strong>Note:</strong> ${escapeHtml(msg)}`;
+  stats.appendChild(el);
+  setTimeout(()=>{ el.remove(); }, 2200);
 }
 
 function doJump(){
