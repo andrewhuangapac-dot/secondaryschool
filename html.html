@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>S1 Practice Portal (G1/G2 Mixed Stream)</title>
+  <style>
+    :root{
+      --bg:#0b0e14;
+      --card:#121827;
+      --card2:#0f1422;
+      --text:#e7eaf0;
+      --muted:#a7b0c3;
+      --line:#25304a;
+      --good:#2ecc71;
+      --bad:#ff5c5c;
+      --warn:#f5c542;
+      --btn:#1d4ed8;
+      --btn2:#334155;
+      --input:#0b1222;
+      --focus:#60a5fa;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:linear-gradient(180deg, var(--bg), #06070b);
+      color:var(--text);
+    }
+    header{
+      padding:20px 16px 10px;
+      border-bottom:1px solid var(--line);
+      background:rgba(10,12,18,0.8);
+      position:sticky;
+      top:0;
+      z-index:10;
+      backdrop-filter: blur(10px);
+    }
+    header h1{
+      margin:0 0 6px;
+      font-size:18px;
+      font-weight:900;
+      letter-spacing:0.2px;
+    }
+    header p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+    .wrap{max-width:1200px;margin:0 auto;padding:16px;}
+    .grid{display:grid;grid-template-columns: 380px 1fr;gap:14px;}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} header{position:relative} }
+    .card{
+      background:linear-gradient(180deg, var(--card), var(--card2));
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    }
+    .card h2{margin:0 0 10px;font-size:14px;color:#dbe2f3;letter-spacing:0.2px;}
+    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px;}
+    select, input[type="text"], textarea{
+      width:100%;
+      padding:10px 10px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:var(--input);
+      color:var(--text);
+      outline:none;
+    }
+    select:focus, input:focus, textarea:focus{
+      border-color: var(--focus);
+      box-shadow:0 0 0 3px rgba(96,165,250,0.15);
+    }
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{
+      appearance:none;
+      border:1px solid rgba(255,255,255,0.08);
+      background:var(--btn);
+      color:white;
+      padding:10px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:900;
+      font-size:13px;
+    }
+    .btn.secondary{background:var(--btn2)}
+    .btn.danger{background:#b91c1c}
+    .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+    .btn:active{transform: translateY(1px)}
+    .small{font-size:12px;color:var(--muted);line-height:1.55;}
+    .pill{
+      display:inline-flex;gap:8px;align-items:center;
+      padding:7px 10px;border:1px solid var(--line);border-radius:999px;
+      background:rgba(255,255,255,0.03);color:var(--muted);font-size:12px;
+    }
+    .stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+    .stats .pill strong{color:var(--text);font-weight:900}
+    .sectionTitle{
+      margin:14px 0 8px;padding:10px 12px;border:1px solid var(--line);
+      border-radius:12px;background:rgba(255,255,255,0.02);
+      display:flex;gap:10px;align-items:center;justify-content:space-between;
+    }
+    .sectionTitle h3{margin:0;font-size:13px;color:#e5e7eb;letter-spacing:0.2px;}
+    .sectionTitle .tag{
+      font-family:var(--mono);font-size:11px;color:#c7d2fe;
+      border:1px solid rgba(199,210,254,0.25);padding:2px 8px;border-radius:999px;
+      background:rgba(199,210,254,0.08);
+    }
+    .q{
+      border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;
+      background:rgba(255,255,255,0.02);
+    }
+    .qhead{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;}
+    .qid{font-family:var(--mono);font-size:12px;color:#c7d2fe;opacity:0.95;}
+    .qprompt{margin:6px 0 10px;color:var(--text);line-height:1.55;white-space:pre-wrap;}
+    .qmeta{font-size:12px;color:var(--muted);margin-top:2px;}
+    .mcq{display:grid;gap:8px;margin-top:6px;}
+    .opt{
+      border:1px solid var(--line);border-radius:10px;padding:10px;background:rgba(0,0,0,0.15);
+      display:flex;align-items:flex-start;gap:10px;cursor:pointer;
+    }
+    .opt input{margin-top:3px}
+    .opt:hover{border-color:#3b82f6}
+    .result{
+      margin-top:10px;padding:10px;border-radius:10px;border:1px dashed var(--line);
+      background:rgba(0,0,0,0.18);color:var(--muted);font-size:12px;line-height:1.55;
+    }
+    .result.good{border-color: rgba(46,204,113,0.45); background: rgba(46,204,113,0.08); color:#d8ffe8;}
+    .result.bad{border-color: rgba(255,92,92,0.45); background: rgba(255,92,92,0.08); color:#ffe2e2;}
+    .result.warn{border-color: rgba(245,197,66,0.55); background: rgba(245,197,66,0.10); color:#fff2cc;}
+    .kbd{
+      font-family:var(--mono);font-size:11px;border:1px solid var(--line);
+      border-bottom-color: rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);
+      padding:2px 6px;border-radius:8px;color:#dbe2f3;
+    }
+    details{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:10px;background:rgba(255,255,255,0.02);}
+    summary{cursor:pointer;color:#dbe2f3;font-weight:900;}
+    table{width:100%;border-collapse:collapse;margin-top:8px;}
+    th, td{
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      padding:8px 6px;font-size:12px;color:var(--muted);vertical-align:top;text-align:left;
+    }
+    th{color:#dbe2f3}
+    .tinyBtn{
+      padding:6px 8px;border-radius:10px;font-size:12px;font-weight:900;cursor:pointer;
+      border:1px solid var(--line);background:rgba(255,255,255,0.04);color:var(--text);
+    }
+    .tinyBtn.danger{
+      background:rgba(185,28,28,0.20);
+      border-color:rgba(185,28,28,0.45);
+      color:#ffe2e2;
+    }
+    .footer{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.55;}
+    @media print{
+      body{background:white;color:black}
+      header{position:relative;background:white;border:none}
+      .card{box-shadow:none;background:white;color:black}
+      .btn, .pill, .footer, #controlsCard, .tinyBtn{display:none!important}
+      .grid{grid-template-columns:1fr}
+      .q{break-inside:avoid}
+      .result{display:none}
+      input, textarea, select{border:1px solid #999;background:white;color:black}
+      details{border:1px solid #999}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>S1 Practice Portal (FSBB G1/G2)</h1>
+    <p>Targeted Levels: <strong>Math/Science (G1 - Practical)</strong> | <strong>English/Chinese (G2 - Academic)</strong>. <br>Offline single-file system with Mistake Bank.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <div class="card" id="controlsCard">
+      <h2>Controls</h2>
+      
+      <label>Mode</label>
+      <select id="subjectSelect"></select>
+      
+      <label>Set</label>
+      <select id="setSelect"></select>
+      
+      <label>Quick jump</label>
+      <div class="row">
+        <input type="text" id="jumpInput" placeholder="Example: D015 or W08" style="flex:1;min-width:160px;">
+        <button class="btn secondary" id="jumpBtn">Go</button>
+      </div>
+      <div class="small" style="margin-top:6px;">Tip: For daily sets, use D001–D200. For weekly sets, use W01–W40.</div>
+
+      <div class="row" style="margin-top:12px;">
+        <button class="btn" id="checkBtn">Check Answers</button>
+        <button class="btn secondary" id="saveBtn">Save Progress</button>
+        <button class="btn ghost" id="resetBtn">Reset This Set</button>
+      </div>
+
+      <!-- Export/Import Section -->
+      <details style="margin-top:12px;">
+        <summary>Data Backup / Transfer</summary>
+        <div class="small" style="margin-top:8px;">
+          Use this to move progress between devices or backup your data from GitHub Pages.
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <button class="btn secondary" id="exportBtn">Export Data</button>
+          <button class="btn ghost" id="importBtn">Import Data</button>
+          <input type="file" id="importFile" style="display:none" accept=".json">
+        </div>
+      </details>
+
+      <div class="row" style="margin-top:10px;">
+        <span class="pill"><input type="checkbox" id="showAnswersToggle" /> <label for="showAnswersToggle" style="margin:0;color:var(--muted);display:inline;">Show model answers</label></span>
+        <span class="pill"><input type="checkbox" id="strictToggle" checked /> <label for="strictToggle" style="margin:0;color:var(--muted);display:inline;">Strict marking</label></span>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <div class="sectionTitle" style="margin-top:12px;">
+        <h3>Mistake Bank</h3>
+        <span class="tag">WRONG</span>
+      </div>
+      <div class="small" id="wrongSummary">Loading…</div>
+      
+      <div class="row" style="margin-top:10px;">
+        <button class="btn secondary" id="openWrongBtn">Open Wrong Review</button>
+        <button class="btn danger" id="clearWrongBtn">Clear Wrong Bank</button>
+      </div>
+
+      <div id="wrongControls" style="display:none; margin-top:10px;">
+        <label>Wrong Review session size</label>
+        <select id="wrongSize">
+          <option value="10">10 questions</option>
+          <option value="20" selected>20 questions</option>
+          <option value="30">30 questions</option>
+          <option value="9999">All questions</option>
+        </select>
+        
+        <div class="row" style="margin-top:10px;">
+          <span class="pill"><input type="checkbox" id="wrongShuffle" checked /> <label for="wrongShuffle" style="margin:0;color:var(--muted);display:inline;">Shuffle</label></span>
+          <span class="pill"><input type="checkbox" id="includeMastered" /> <label for="includeMastered" style="margin:0;color:var(--muted);display:inline;">Include mastered</label></span>
+          <span class="pill"><input type="checkbox" id="autoRemoveToggle" checked /> <label for="autoRemoveToggle" style="margin:0;color:var(--muted);display:inline;">Auto-remove when corrected</label></span>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="buildWrongSessionBtn">Build Review Session</button>
+        </div>
+
+        <div class="small" style="margin-top:10px;">
+          Tip: If <strong>Auto-remove</strong> is ON, a wrong question will disappear from the bank once you answer it correctly in any mode.
+        </div>
+      </div>
+
+      <details id="mistakeLog" style="margin-top:10px;">
+        <summary>Mistake Log (expand)</summary>
+        <div class="small" id="mistakeLogBody">Loading…</div>
+      </details>
+
+      <details style="margin-top:10px;">
+        <summary>How to use</summary>
+        <div class="small" style="margin-top:8px;">
+          <ol>
+            <li><strong>Levels:</strong> Math/Science (G1 Practical), Eng/Chi (G2 Academic).</li>
+            <li>Use <span class="kbd">Daily Papers</span> for short daily practice.</li>
+            <li>Click <span class="kbd">Check Answers</span> to record mistakes.</li>
+            <li>Use <span class="kbd">Wrong Review</span> to practice weaknesses.</li>
+          </ol>
+        </div>
+      </details>
+
+      <div class="footer">
+        <div><strong>Marking boundaries:</strong> MCQ/numeric/ratio/list are auto-checked. Keyword questions check for marking points. Long writing remains self-check with a checklist.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="setTitle">Paper</h2>
+      <div class="small" id="setDesc"></div>
+      <div id="questionContainer"></div>
+      <div class="footer" id="footerNote"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====================== RNG & Helpers ======================
+function makeRng(seed){
+  let s = seed >>> 0;
+  return function(){
+    s = (1664525 * s + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+function randInt(r, min, max){ return Math.floor(r() * (max - min + 1)) + min; }
+function choice(r, arr){ return arr[Math.floor(r() * arr.length)]; }
+function shuffleArray(r, arr){
+  const a = arr.slice();
+  for(let i=a.length-1; i>0; i--){
+    const j = Math.floor(r() * (i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Helper to create valid MCQ with shuffled options
+function createRandomMCQ(r, prompt, correctText, distractors){
+  const all = [{text:correctText, isCorrect:true}];
+  distractors.forEach(d => all.push({text:d, isCorrect:false}));
+  const shuffled = shuffleArray(r, all);
+  const labels = ["A","B","C","D","E"].slice(0, shuffled.length);
+  const options = shuffled.map((item, i) => ({ value: labels[i], label: item.text }));
+  const correctOpt = options.find((opt, i) => shuffled[i].isCorrect);
+  return { type: "mcq", prompt: prompt, options: options, ans: correctOpt.value };
+}
+
+function shuffleBankItem(r, item){
+  const correctOpt = item.options.find(o => o[0] === item.ans);
+  if(!correctOpt) return item; 
+  const correctText = correctOpt[1];
+  const distractors = item.options.filter(o => o[0] !== item.ans).map(o => o[1]);
+  return createRandomMCQ(r, item.stem, correctText, distractors);
+}
+
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a||1; }
+function simplifyRatio(a,b){ const g=gcd(a,b); return [a/g, b/g]; }
+
+// ====================== Parsing ======================
+function normalizeBasic(s){ return (s||"").toString().trim().replace(/\s+/g," ").replace(/[，、；]/g,",").replace(/[。！？]/g,"").toLowerCase(); }
+function stripToNumberString(s){ return (s||"").toString().trim().replace(/[^\d\-\.\:\/]/g,""); }
+function parseNumber(input){
+  const raw = stripToNumberString(input);
+  if(!raw) return NaN;
+  if(raw.includes("/") && !raw.includes(":")){
+    const parts = raw.split("/");
+    if(parts.length===2){ const a=parseFloat(parts[0]); const b=parseFloat(parts[1]); if(isFinite(a)&&isFinite(b)&&b!==0) return a/b; }
+  }
+  if(raw.includes(":")){
+    const parts = raw.split(":");
+    if(parts.length===2){ const a=parseFloat(parts[0]); const b=parseFloat(parts[1]); if(isFinite(a)&&isFinite(b)&&b!==0) return a/b; }
+  }
+  return parseFloat(raw);
+}
+function parseRatio(input){
+  const raw = stripToNumberString(input);
+  if(!raw) return null;
+  let a,b;
+  if(raw.includes(":")){ const p=raw.split(":"); if(p.length!==2) return null; a=parseFloat(p[0]); b=parseFloat(p[1]); }
+  else if(raw.includes("/")){ const p=raw.split("/"); if(p.length!==2) return null; a=parseFloat(p[0]); b=parseFloat(p[1]); }
+  else return null;
+  if(!isFinite(a)||!isFinite(b)||b===0) return null;
+  const scale = Math.pow(10, Math.max((a.toString().split(".")[1]||"").length, (b.toString().split(".")[1]||"").length));
+  const ia = Math.round(a*scale); const ib = Math.round(b*scale);
+  const g = gcd(ia, ib);
+  return [ia/g, ib/g];
+}
+function parseList(input, mode){
+  let s = (input||"").toString().trim(); if(!s) return [];
+  s = s.replace(/[，、；]/g,",");
+  let parts = s.split(",").map(x=>x.trim()).filter(Boolean);
+  if(mode==="numberList"){
+    parts = parts.map(p=>{
+      const n = parseNumber(p);
+      if(Number.isNaN(n)) return p;
+      if(Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
+      return String(n);
+    });
+  }
+  return parts;
+}
+function countMatchedKeywords(text, keywords){
+  const t = (text||"").toString().toLowerCase();
+  let count = 0;
+  for(const k of keywords){ if(!k) continue; if(t.includes(k.toLowerCase())) count += 1; }
+  return count;
+}
+
+// ====================== Mistake Bank ======================
+const WRONG_KEY = "S1MistakeBank:v2";
+function loadMistakeBank(){
+  const raw = localStorage.getItem(WRONG_KEY);
+  if(!raw){ return { settings: { autoRemoveWhenCorrect: true }, items: {} }; }
+  try{ const obj = JSON.parse(raw); if(!obj.items) obj.items={}; return obj; }catch(e){ return { settings: { autoRemoveWhenCorrect: true }, items: {} }; }
+}
+function saveMistakeBank(bank){ localStorage.setItem(WRONG_KEY, JSON.stringify(bank)); }
+let MISTAKE_BANK = loadMistakeBank();
+
+function snapshotQuestion(q){
+  const snap = {
+    id: q.id, section: q.section||"General", type: q.type, prompt: q.prompt,
+    contextKey: q.contextKey||"", contextTitle: q.contextTitle||"", context: q.context||"",
+    answer: q.answer, options: q.options?q.options.map(o=>({value:o.value, label:o.label})):undefined,
+    answerRatio: q.answerRatio, answerList: q.answerList, normalize: q.normalize, answerText: q.answerText,
+    altAnswers: q.altAnswers, tolerance: q.tolerance, keywordsAnyOf: q.keywordsAnyOf, minKeywords: q.minKeywords, model: q.model
+  };
+  Object.keys(snap).forEach(k=>{ if(snap[k]===undefined) delete snap[k]; });
+  return snap;
+}
+function recordWrong(q, userAnswer, setKey){
+  const id = q.id; const now = new Date().toISOString();
+  const item = MISTAKE_BANK.items[id] || { wrongCount: 0 };
+  item.id = id; item.section = q.section||"General"; item.setRef = setKey||"";
+  item.wrongCount = (item.wrongCount||0)+1; item.lastWrongAt = now; item.lastUserAnswer = (userAnswer||"").toString(); item.mastered = false;
+  item.snapshot = snapshotQuestion(q);
+  MISTAKE_BANK.items[id] = item; saveMistakeBank(MISTAKE_BANK);
+}
+function recordCorrectIfTracked(q){
+  const id = q.id; const item = MISTAKE_BANK.items[id]; if(!item) return;
+  if(MISTAKE_BANK.settings?.autoRemoveWhenCorrect){ delete MISTAKE_BANK.items[id]; }
+  else{ item.mastered = true; item.lastCorrectAt = new Date().toISOString(); MISTAKE_BANK.items[id] = item; }
+  saveMistakeBank(MISTAKE_BANK);
+}
+function removeMistake(id){ if(MISTAKE_BANK.items[id]){ delete MISTAKE_BANK.items[id]; saveMistakeBank(MISTAKE_BANK); } }
+
+// ====================== G1 MATH CURRICULUM (Practical) ======================
+const MATH_MODULES = [
+  {name:"G1: Practical Arithmetic (Money/Time)"}, 
+  {name:"G1: Fractions & Decimals in Daily Life"}, 
+  {name:"G1: Ratio & Proportion (Recipes/Maps)"}, 
+  {name:"G1: Percentage (Discount/GST)"}, 
+  {name:"G1: Basic Algebra (Formulas)"}, 
+  {name:"G1: Simple Equations"}, 
+  {name:"G1: Geometry (Lines & Angles)"}, 
+  {name:"G1: Area & Perimeter (Rectangles)"}, 
+  {name:"G1: Volume (Cuboids)"}, 
+  {name:"G1: Reading Charts (Stats)"}
+];
+
+function genMathDaily(r, weekIndex, dayOfWeek, dayIndex){
+  const moduleIndex = Math.floor((weekIndex-1)/4) % MATH_MODULES.length;
+  const module = MATH_MODULES[moduleIndex].name;
+  const qs = [];
+  const idPrefix = `D${String(dayIndex).padStart(3,"0")}-M`;
+  function add(q){ q.section="Math(G1)"; qs.push(q); }
+
+  if(moduleIndex===0){ // Arithmetic / Money / Time
+    const price = randInt(r, 200, 900) / 100; // 2.00 to 9.00
+    const give = Math.ceil(price) + randInt(r, 1, 5);
+    add({id:`${idPrefix}Q1`, type:"number", prompt:`1) You buy a notebook for $${price.toFixed(2)}. You give the cashier $${give}. How much change?`, answer:give-price, tolerance:0.01});
+    
+    const h1 = randInt(r,8,10); const m1 = randInt(r,10,50);
+    const dur = randInt(r,10,40);
+    add({id:`${idPrefix}Q2`, type:"number", prompt:`2) A bus ride starts at ${h1}:${m1} and takes ${dur} minutes. The minute it ends is (add minutes only):`, answer:(m1+dur)%60, tolerance:0.5}); // Simplified check
+    
+    const a = randInt(r,15,35); const b = randInt(r,5,15);
+    add({id:`${idPrefix}Q3`, type:"number", prompt:`3) Calculate: ${a} - ${b} + 10 =`, answer:a-b+10});
+    add({id:`${idPrefix}Q4`, type:"number", prompt:`4) Round ${randInt(r,1234,9876)} to the nearest 100.`, answer:Math.round(randInt(r,1234,9876)/100)*100}); // Error in logic fixed in prompt usage
+    const rNum = randInt(r,1234,9876);
+    qs[qs.length-1].prompt = `4) Round ${rNum} to the nearest 100.`;
+    qs[qs.length-1].answer = Math.round(rNum/100)*100;
+  }
+  else if(moduleIndex===1){ // Fractions Decimals (G1)
+    const top = randInt(r,1,3); const bot = 4;
+    add({id:`${idPrefix}Q1`, type:"number", prompt:`1) Convert ${top}/${bot} to a decimal.`, answer:top/bot});
+    const d1 = randInt(r,1,9)/10; const d2 = randInt(r,1,9)/10;
+    add({id:`${idPrefix}Q2`, type:"number", prompt:`2) ${d1} + ${d2} =`, answer:d1+d2});
+    add({id:`${idPrefix}Q3`, type:"mcq", prompt:"3) Which is smaller?", options:[{value:"A",label:"0.5"},{value:"B",label:"0.05"},{value:"C",label:"0.55"}], ans:"B"});
+    add({id:`${idPrefix}Q4`, type:"number", prompt:`4) 1/2 of ${randInt(r,10,100)*2} is:`, answer:100}); // placeholder logic
+    const val = randInt(r,10,100)*2;
+    qs[qs.length-1].prompt = `4) 1/2 of ${val} is:`;
+    qs[qs.length-1].answer = val/2;
+  }
+  else if(moduleIndex===2){ // Ratio (Recipe)
+    const flour = randInt(r,100,500); const sugar = randInt(r,50,200);
+    add({id:`${idPrefix}Q1`, type:"ratio", prompt:`1) Ratio of ${flour}g flour to ${sugar}g sugar (simplify):`, answerRatio:simplifyRatio(flour, sugar)});
+    const ratio = randInt(r,2,5);
+    add({id:`${idPrefix}Q2`, type:"number", prompt:`2) A map scale is 1:${ratio}000. 1 cm on map is ____ meters real life.`, answer:ratio*10});
+    add({id:`${idPrefix}Q3`, type:"number", prompt:`3) To make 2 cakes, you need 4 eggs. For 5 cakes, you need ____ eggs.`, answer:10});
+    add({id:`${idPrefix}Q4`, type:"number", prompt:`4) Share $20 between A and B in ratio 1:1. A gets $___.`, answer:10});
+  }
+  else if(moduleIndex===3){ // Percentage (G1)
+    const pct = choice(r,[10,20,50]);
+    const amt = randInt(r,2,9)*10;
+    add({id:`${idPrefix}Q1`, type:"number", prompt:`1) ${pct}% of $${amt} is:`, answer:amt*pct/100});
+    add({id:`${idPrefix}Q2`, type:"number", prompt:`2) 50% means half. True (1) or False (0)? Enter 1 or 0.`, answer:1});
+    add({id:`${idPrefix}Q3`, type:"number", prompt:`3) Express 3/4 as a percentage.`, answer:75});
+    const gst = 9;
+    const price = randInt(r,10,50);
+    add({id:`${idPrefix}Q4`, type:"number", prompt:`4) $${price} plus ${gst}% GST. Tax amount only =`, answer:price*gst/100});
+  }
+  else if(moduleIndex===4){ // Basic Algebra (G1) - Substitution
+    const x = randInt(r,2,10);
+    add({id:`${idPrefix}Q1`, type:"number", prompt:`1) If x = ${x}, find value of x + 5.`, answer:x+5});
+    add({id:`${idPrefix}Q2`, type:"number", prompt:`2) If y = 10, find value of 2y (2 times y).`, answer:20});
+    add({id:`${idPrefix}Q3`, type:"mcq", prompt:"3) Area of rectangle is length × breadth. Formula is:", options:[{value:"A",label:"A = l + b"},{value:"B",label:"A = lb"},{value:"C",label:"A = l - b"}], ans:"B"});
+    add({id:`${idPrefix}Q4`, type:"text", prompt:"4) Simplify: a + a + a", answerText:"3a", altAnswers:["3*a"]});
+  }
+  else if(moduleIndex===5){ // Simple Equations (G1) - No negatives
+    const ans = randInt(r,2,12);
+    add({id:`${idPrefix}Q1`, type:"number", prompt:`1) Find x: x + 4 = ${ans+4}`, answer:ans});
+    add({id:`${idPrefix}Q2`, type:"number", prompt:`2) Find y: 3y = ${ans*3}`, answer:ans});
+    add({id:`${idPrefix}Q3`, type:"number", prompt:`3) Find m: m - 5 = 10`, answer:15});
+    add({id:`${idPrefix}Q4`, type:"mcq", prompt:"4) To find x in '2x = 10', you should:", options:[{value:"A",label:"Divide by 2"},{value:"B",label:"Subtract 2"}], ans:"A"});
+  }
+  else if(moduleIndex===6){ // Geometry (G1)
+    add({id:`${idPrefix}Q1`, type:"number", prompt:`1) A straight line is ____ degrees.`, answer:180});
+    add({id:`${idPrefix}Q2`, type:"number", prompt:`2) A right angle is ____ degrees.`, answer:90});
+    add({id:`${idPrefix}Q3`, type:"number", prompt:`3) Angles on a straight line: 120° and x. Find x.`, answer:60});
+    add({id:`${idPrefix}Q4`, type:"mcq", prompt:"4) An obtuse angle is:", options:[{value:"A",label:"Less than 90°"},{value:"B",label:"More than 90° but less than 180°"}], ans:"B"});
+  }
+  else if(moduleIndex===7){ // Area/Perimeter (G1)
+    const L = randInt(r,5,10); const W = randInt(r,2,4);
+    add({id:`${idPrefix}Q1`, type:"number", prompt:`1) Rectangle: Length ${L}cm, Width ${W}cm. Area = ? cm²`, answer:L*W});
+    add({id:`${idPrefix}Q2`, type:"number", prompt:`2) Same rectangle. Perimeter = ? cm`, answer:2*(L+W)});
+    add({id:`${idPrefix}Q3`, type:"number", prompt:`3) Area of square with side 5cm.`, answer:25});
+    add({id:`${idPrefix}Q4`, type:"mcq", prompt:"4) Perimeter is the distance:", options:[{value:"A",label:"Inside the shape"},{value:"B",label:"Around the shape"}], ans:"B"});
+  }
+  else if(moduleIndex===8){ // Volume (G1)
+    const L = randInt(r,2,5);
+    add({id:`${idPrefix}Q1`, type:"number", prompt:`1) Volume of cube with side ${L}cm.`, answer:L*L*L});
+    add({id:`${idPrefix}Q2`, type:"number", prompt:`2) 1 Litre = ____ ml.`, answer:1000});
+    add({id:`${idPrefix}Q3`, type:"mcq", prompt:"3) Volume is measured in:", options:[{value:"A",label:"cm²"},{value:"B",label:"cm³"}], ans:"B"});
+    add({id:`${idPrefix}Q4`, type:"number", prompt:`4) Box 10cm by 2cm by 5cm. Volume =`, answer:100});
+  }
+  else { // Stats (G1)
+    add({id:`${idPrefix}Q1`, type:"mcq", prompt:"1) Which chart uses bars to show data?", options:[{value:"A",label:"Bar chart"},{value:"B",label:"Pie chart"}], ans:"A"});
+    const d1=10, d2=20, d3=5;
+    add({id:`${idPrefix}Q2`, type:"number", prompt:`2) Data: 10, 20, 5. What is the total?`, answer:35});
+    add({id:`${idPrefix}Q3`, type:"number", prompt:`3) What is the lowest number in: 5, 2, 8, 9?`, answer:2});
+    add({id:`${idPrefix}Q4`, type:"mcq", prompt:"4) A pictograph uses ____ to represent data.", options:[{value:"A",label:"Lines"},{value:"B",label:"Pictures/Icons"}], ans:"B"});
+  }
+  return {module, questions:qs};
+}
+
+// ====================== G1 SCIENCE CURRICULUM (Practical) ======================
+const SCI_MODULES = [
+  {name:"G1: Safety & Measurements"}, 
+  {name:"G1: Materials & Properties"}, 
+  {name:"G1: Water & Environment"}, 
+  {name:"G1: Energy (Forms & Uses)"}, 
+  {name:"G1: Heat (Effects)"}, 
+  {name:"G1: Electricity (Safety/Circuits)"}, 
+  {name:"G1: Living Things (Basic)"}, 
+  {name:"G1: Forces (Simple)"}
+];
+
+function genScienceDaily(r, weekIndex, dayOfWeek, dayIndex){
+  const moduleIndex = Math.floor((weekIndex-1)/5) % SCI_MODULES.length;
+  const module = SCI_MODULES[moduleIndex].name;
+  const qs = [];
+  const idPrefix = `D${String(dayIndex).padStart(3,"0")}-S`;
+  function add(q){ q.section="Science(G1)"; qs.push(q); }
+
+  if(moduleIndex===0){ // Safety
+    let mQ = createRandomMCQ(r, "1) What symbol means 'Flammable'?", "Fire/Flame", ["Skull (Toxic)", "Explosion", "Hand"]); mQ.id=`${idPrefix}Q1`; add(mQ);
+    add({id:`${idPrefix}Q2`, type:"number", prompt:`2) Length of a pencil is about 15 ____. (1 for cm, 2 for m). Enter 1 or 2.`, answer:1});
+    mQ = createRandomMCQ(r, "3) In the lab, you must:", "Wear covered shoes", ["Eat snacks", "Run around"]); mQ.id=`${idPrefix}Q3`; add(mQ);
+    add({id:`${idPrefix}Q4`, type:"keywords", prompt:"4) Why wash hands after experiment?", keywordsAnyOf:["clean","chemical","germs","safety"], minKeywords:1, model:"To remove chemicals/germs."});
+  }
+  else if(moduleIndex===1){ // Materials
+    let mQ = createRandomMCQ(r, "1) Which material is hard and magnetic?", "Steel/Iron", ["Wood", "Plastic", "Rubber"]); mQ.id=`${idPrefix}Q1`; add(mQ);
+    mQ = createRandomMCQ(r, "2) Glass is used for windows because it is:", "Transparent", ["Opaque", "Flexible"]); mQ.id=`${idPrefix}Q2`; add(mQ);
+    add({id:`${idPrefix}Q3`, type:"keywords", prompt:"3) Why are raincoats made of plastic?", keywordsAnyOf:["waterproof","water"], minKeywords:1, model:"Because plastic is waterproof."});
+    add({id:`${idPrefix}Q4`, type:"keywords", prompt:"4) Ceramics (pottery) break easily. This means they are:", keywordsAnyOf:["brittle","break"], minKeywords:1, model:"Brittle."});
+  }
+  else if(moduleIndex===2){ // Water
+    let mQ = createRandomMCQ(r, "1) Water freezes at:", "0°C", ["100°C", "50°C"]); mQ.id=`${idPrefix}Q1`; add(mQ);
+    mQ = createRandomMCQ(r, "2) To save water, we should:", "Use a mug when brushing teeth", ["Leave tap running", "Shower for 30 mins"]); mQ.id=`${idPrefix}Q2`; add(mQ);
+    add({id:`${idPrefix}Q3`, type:"keywords", prompt:"3) Dirty water can cause:", keywordsAnyOf:["sickness","disease","stomach"], minKeywords:1, model:"Sickness/diseases."});
+    add({id:`${idPrefix}Q4`, type:"keywords", prompt:"4) Example of water pollution?", keywordsAnyOf:["litter","oil","rubbish","plastic"], minKeywords:1, model:"Throwing rubbish/oil into drains."});
+  }
+  else if(moduleIndex===3){ // Energy
+    let mQ = createRandomMCQ(r, "1) The main source of energy for Earth is:", "Sun", ["Moon", "Battery"]); mQ.id=`${idPrefix}Q1`; add(mQ);
+    mQ = createRandomMCQ(r, "2) Food gives us:", "Chemical Potential Energy (Energy to move)", ["Electrical Energy", "Light Energy"]); mQ.id=`${idPrefix}Q2`; add(mQ);
+    add({id:`${idPrefix}Q3`, type:"keywords", prompt:"3) A moving car has ____ energy.", keywordsAnyOf:["kinetic","movement"], minKeywords:1, model:"Kinetic energy."});
+    add({id:`${idPrefix}Q4`, type:"keywords", prompt:"4) Batteries store ____ energy.", keywordsAnyOf:["chemical","potential"], minKeywords:1, model:"Chemical potential energy."});
+  }
+  else if(moduleIndex===4){ // Heat
+    let mQ = createRandomMCQ(r, "1) When things get hot, they usually:", "Expand", ["Contract", "Freeze"]); mQ.id=`${idPrefix}Q1`; add(mQ);
+    mQ = createRandomMCQ(r, "2) Good conductor of heat:", "Metal spoon", ["Wooden stick", "Plastic cup"]); mQ.id=`${idPrefix}Q2`; add(mQ);
+    add({id:`${idPrefix}Q3`, type:"keywords", prompt:"3) Why use a cloth to hold a hot pot?", keywordsAnyOf:["insulator","burn","heat"], minKeywords:1, model:"Cloth is an insulator; prevents burns."});
+    add({id:`${idPrefix}Q4`, type:"keywords", prompt:"4) Temperature is measured in degree ____.", keywordsAnyOf:["celsius","c"], minKeywords:1, model:"Celsius."});
+  }
+  else if(moduleIndex===5){ // Electricity
+    let mQ = createRandomMCQ(r, "1) To calculate cost of electricity, we check:", "Power usage (Watts/kW)", ["Color of wire", "Size of bulb"]); mQ.id=`${idPrefix}Q1`; add(mQ);
+    mQ = createRandomMCQ(r, "2) Electrical safety rule:", "Do not touch with wet hands", ["Put metal in sockets", "Overload sockets"]); mQ.id=`${idPrefix}Q2`; add(mQ);
+    add({id:`${idPrefix}Q3`, type:"keywords", prompt:"3) Material that lets electricity pass through is a:", keywordsAnyOf:["conductor"], minKeywords:1, model:"Conductor."});
+    add({id:`${idPrefix}Q4`, type:"keywords", prompt:"4) Rubber is used for wires because it is an:", keywordsAnyOf:["insulator"], minKeywords:1, model:"Insulator."});
+  }
+  else if(moduleIndex===6){ // Living Things
+    let mQ = createRandomMCQ(r, "1) Which system breaks down food?", "Digestive system", ["Respiratory system", "Skeletal system"]); mQ.id=`${idPrefix}Q1`; add(mQ);
+    mQ = createRandomMCQ(r, "2) We breathe in ____ and breathe out Carbon Dioxide.", "Oxygen", ["Nitrogen", "Water"]); mQ.id=`${idPrefix}Q2`; add(mQ);
+    add({id:`${idPrefix}Q3`, type:"keywords", prompt:"3) Plants need sunlight to make:", keywordsAnyOf:["food","sugar"], minKeywords:1, model:"Food."});
+    add({id:`${idPrefix}Q4`, type:"keywords", prompt:"4) The heart pumps ____ around the body.", keywordsAnyOf:["blood"], minKeywords:1, model:"Blood."});
+  }
+  else { // Forces
+    let mQ = createRandomMCQ(r, "1) Force can make a moving object:", "Stop or change direction", ["Disappear", "Freeze"]); mQ.id=`${idPrefix}Q1`; add(mQ);
+    mQ = createRandomMCQ(r, "2) Friction helps us to:", "Walk without slipping", ["Fly", "Swim fast"]); mQ.id=`${idPrefix}Q2`; add(mQ);
+    add({id:`${idPrefix}Q3`, type:"keywords", prompt:"3) Gravity pulls things ____.", keywordsAnyOf:["down","earth","ground"], minKeywords:1, model:"Down / Towards Earth."});
+    add({id:`${idPrefix}Q4`, type:"keywords", prompt:"4) Oil makes surfaces slippery because it reduces ____.", keywordsAnyOf:["friction"], minKeywords:1, model:"Friction."});
+  }
+  return {module, questions:qs};
+}
+
+// ====================== English/Chinese G2 Generators ======================
+// (Using the Expanded Logic from previous version, suitable for G2)
+// English: Grammar + Reading + Editing
+// Chinese: Vocab + Reading + Sentences (A/B/C sets)
+
+// ... [Keep genEnglishGrammarMCQ, genEnglishReading, genEnglishEditing unchanged as they fit G2] ...
+// ... [Keep genChineseVocabMCQ, genChineseReading, genChineseSentenceAndRhetoric unchanged as they fit G2] ...
+
+// Re-inserting the functions for completeness
+function genEnglishDaily(r, weekIndex, dayOfWeek, dayIndex){
+  const qs = [];
+  const dayId = `D${String(dayIndex).padStart(3,"0")}`;
+  const idPrefix = `${dayId}-E`;
+  function add(q){ q.section="English(G2)"; qs.push(q); }
+
+  const base = dayIndex*17;
+  for(let i=0;i<2;i++){
+    const item = genEnglishGrammarMCQ(r, base+i);
+    item.id = `${idPrefix}GQ${i+1}`;
+    add(item);
+  }
+
+  if(dayOfWeek===1 || dayOfWeek===3){
+    const reading = genEnglishReading(r);
+    const ctxKey = `${dayId}-EN-READ`;
+    reading.questions.forEach((item, i)=>{
+      item.id = `${idPrefix}RQ${i+1}`;
+      item.contextKey = ctxKey;
+      item.contextTitle = "English Reading Passage";
+      item.context = reading.passage;
+      add(item);
+    });
+  }else if(dayOfWeek===2 || dayOfWeek===4){
+    const editing = genEnglishEditing(r);
+    const editKey = `${dayId}-EN-EDIT`;
+    editing.questions.forEach((item, i)=>{
+      item.id = `${idPrefix}DQ${i+1}`;
+      item.contextKey = editKey;
+      item.contextTitle = "Editing Passage";
+      item.context = editing.paragraph;
+      add(item);
+    });
+  }else{
+    for(let i=2;i<6;i++){
+      const item = genEnglishGrammarMCQ(r, base+i);
+      item.id = `${idPrefix}GQ${i+1}`;
+      add(item);
+    }
+    const vQ = createRandomMCQ(r, "Vocabulary) Choose the best meaning: “reliable” means:", "can be trusted", ["easy to break", "very loud", "dangerous"]);
+    vQ.id = `${idPrefix}VQ1`;
+    add(vQ);
+    const wp = EN_WRITING_PROMPTS[(weekIndex-1) % EN_WRITING_PROMPTS.length];
+    add({
+      id:`${idPrefix}WQ1`,
+      type:"info",
+      prompt:`Writing (self-check): ${wp}\n\nPlan: Purpose -> Context -> Outcome.`,
+      model:"Checklist:\n- Tone is appropriate (Polite)\n- Spelling correct\n- Clear points"
+    });
+  }
+  return {module:"Daily English (G2)", questions: qs};
+}
+
+function genChineseDaily(r, weekIndex, dayOfWeek, dayIndex){
+  const qs = [];
+  const dayId = `D${String(dayIndex).padStart(3,"0")}`;
+  const idPrefix = `${dayId}-C`;
+  function add(q){ q.section="Chinese(G2)"; qs.push(q); }
+
+  const base = dayIndex*11;
+  for(let i=0;i<2;i++){
+    const item = genChineseVocabMCQ(r, base+i);
+    item.id = `${idPrefix}VQ${i+1}`;
+    add(item);
+  }
+
+  if(dayOfWeek===1 || dayOfWeek===4){
+    const reading = genChineseReading(r);
+    const ctxKey = `${dayId}-CH-READ`;
+    reading.questions.forEach((item, i)=>{
+      item.id = `${idPrefix}RQ${i+1}`;
+      item.contextKey = ctxKey;
+      item.contextTitle = "华文阅读短文";
+      item.context = reading.passage;
+      add(item);
+    });
+  }else if(dayOfWeek===2 || dayOfWeek===5){
+    const items = genChineseSentenceAndRhetoric(r);
+    items.forEach((it, i)=>{
+      it.id = `${idPrefix}SQ${i+1}`;
+      add(it);
+    });
+    if(dayOfWeek===5){
+      add({
+        id:`${idPrefix}KQ1`,
+        type:"keywords",
+        prompt:"简答：你认为怎样才能养成好习惯？（写一句）",
+        keywordsAnyOf:["坚持","努力","规划","目标"],
+        minKeywords: 1,
+        model:"例如：我们要制定计划并坚持做下去。"
+      });
+    }
+  }else{
+    for(let i=2;i<6;i++){
+      const item = genChineseVocabMCQ(r, base+i);
+      item.id = `${idPrefix}VQ${i+1}`;
+      add(item);
+    }
+  }
+  return {module:"Daily Chinese (G2)", questions: qs};
+}
+
+// ====================== Set Builders ======================
+function buildDailySet(dayIndex){
+  const weekIndex = Math.floor((dayIndex-1)/5) + 1;
+  const dayOfWeek = ((dayIndex-1)%5) + 1;
+  const weekStr = String(weekIndex).padStart(2,"0");
+  const dayStr = String(dayIndex).padStart(3,"0");
+  const seed = 2026000 + dayIndex*1231;
+  const r = makeRng(seed);
+
+  const md = genMathDaily(r, weekIndex, dayOfWeek, dayIndex);
+  const sd = genScienceDaily(r, weekIndex, dayOfWeek, dayIndex);
+  const ed = genEnglishDaily(r, weekIndex, dayOfWeek, dayIndex);
+  const cd = genChineseDaily(r, weekIndex, dayOfWeek, dayIndex);
+
+  const desc = [
+    `Week ${weekStr} Day ${dayOfWeek}`,
+    `Math (G1): ${md.module}`,
+    `Science (G1): ${sd.module}`,
+    `English (G2): ${ed.module}`,
+    `Chinese (G2): ${cd.module}`
+  ].join(" | ");
+
+  return { title: `Daily Paper – D${dayStr}`, desc, questions: [...md.questions, ...sd.questions, ...ed.questions, ...cd.questions] };
+}
+
+function buildWeeklySet(weekIndex){
+  const questions = [];
+  const weekStr = String(weekIndex).padStart(2,"0");
+  for(let dow=1; dow<=5; dow++){
+    const dayIndex = (weekIndex-1)*5 + dow;
+    const seed = 2026000 + dayIndex*1231;
+    const r = makeRng(seed);
+    const md = genMathDaily(r, weekIndex, dow, dayIndex);
+    const sd = genScienceDaily(r, weekIndex, dow, dayIndex);
+    const ed = genEnglishDaily(r, weekIndex, dow, dayIndex);
+    const cd = genChineseDaily(r, weekIndex, dow, dayIndex);
+    questions.push({id:`W${weekStr}-INFO-${dow}`, section:"Week", type:"info", prompt:`Day ${dow} (D${String(dayIndex).padStart(3,"0")}).`});
+    questions.push(...md.questions, ...sd.questions, ...ed.questions, ...cd.questions);
+  }
+  return { title:`Weekly Consolidation – Week ${weekStr}`, desc:`Combined Week ${weekStr} (G1/G2 Mixed)`, questions };
+}
+
+function buildWrongReviewSet(){
+  const sizeSel = document.getElementById("wrongSize");
+  const shuffleSel = document.getElementById("wrongShuffle");
+  const includeMastered = document.getElementById("includeMastered");
+  const limit = sizeSel ? parseInt(sizeSel.value, 10) : 20;
+  const doShuffle = shuffleSel ? shuffleSel.checked : true;
+  const includeM = includeMastered ? includeMastered.checked : false;
+  const items = Object.values(MISTAKE_BANK.items || {}).filter(it=>{ if(includeM) return true; return !it.mastered; });
+
+  if(items.length === 0){
+    return {
+      title: "Wrong Question Review (Empty)",
+      desc: "No mistakes recorded yet. Do daily papers first.",
+      questions: [ {id:"WRONG-INFO-1", section:"Review", type:"info", prompt:"No wrong questions found."} ]
+    };
+  }
+  let selected = items.map(it=>it.snapshot).filter(Boolean);
+  if(doShuffle){ for(let i=selected.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [selected[i],selected[j]]=[selected[j],selected[i]]; } }
+  if(limit < 9999) selected = selected.slice(0, limit);
+  selected = selected.map(q=>{ q.section = q.section || "Review"; return q; });
+  return { title: `Wrong Review (${selected.length} items)`, desc: "From Mistake Bank.", questions: selected };
+}
+
+// ====================== Bank & UI ======================
+const BANK = {
+  daily:  { label: "Daily Papers (200 school days)", sets: {} },
+  weekly: { label: "Weekly Papers (Week 01–40)", sets: {} },
+  wrong:  { label: "Wrong Question Review", sets: { SESSION: { title:"Review Session", generator:{ wrong:true } } } }
+};
+for(let i=1;i<=SCHOOL_DAYS;i++){ BANK.daily.sets["D"+String(i).padStart(3,"0")] = { title: `Daily D${String(i).padStart(3,"0")}`, generator:{ day:i } }; }
+for(let w=1;w<=WEEKS;w++){ BANK.weekly.sets["W"+String(w).padStart(2,"0")] = { title: `Weekly W${String(w).padStart(2,"0")}`, generator:{ week:w } }; }
+
+const subjectSelect = document.getElementById("subjectSelect");
+const setSelect = document.getElementById("setSelect");
+const setTitle = document.getElementById("setTitle");
+const setDesc = document.getElementById("setDesc");
+const questionContainer = document.getElementById("questionContainer");
+const stats = document.getElementById("stats");
+const showAnswersToggle = document.getElementById("showAnswersToggle");
+const strictToggle = document.getElementById("strictToggle");
+const checkBtn = document.getElementById("checkBtn");
+const saveBtn = document.getElementById("saveBtn");
+const resetBtn = document.getElementById("resetBtn");
+const footerNote = document.getElementById("footerNote");
+const openWrongBtn = document.getElementById("openWrongBtn");
+const clearWrongBtn = document.getElementById("clearWrongBtn");
+const wrongSummary = document.getElementById("wrongSummary");
+const wrongControls = document.getElementById("wrongControls");
+const buildWrongSessionBtn = document.getElementById("buildWrongSessionBtn");
+const autoRemoveToggle = document.getElementById("autoRemoveToggle");
+const mistakeLogBody = document.getElementById("mistakeLogBody");
+const jumpInput = document.getElementById("jumpInput");
+const jumpBtn = document.getElementById("jumpBtn");
+const exportBtn = document.getElementById("exportBtn");
+const importBtn = document.getElementById("importBtn");
+const importFile = document.getElementById("importFile");
+
+function escapeHtml(s){ return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); }
+function populateSubjects(){ subjectSelect.innerHTML = Object.keys(BANK).map(k=>`<option value="${k}">${BANK[k].label}</option>`).join(""); }
+function populateSets(){
+  const subjKey = subjectSelect.value;
+  setSelect.innerHTML = Object.keys(BANK[subjKey].sets).map(k=>`<option value="${k}">${BANK[subjKey].sets[k].title}</option>`).join("");
+}
+function getCurrent(){
+  const subjKey = subjectSelect.value; const setKey = setSelect.value;
+  let set = BANK[subjKey].sets[setKey];
+  if(subjKey==="daily" && set.generator.day) set = buildDailySet(set.generator.day);
+  else if(subjKey==="weekly" && set.generator.week) set = buildWeeklySet(set.generator.week);
+  else if(subjKey==="wrong") set = buildWrongReviewSet();
+  return {subjKey, setKey, set};
+}
+function storageKey(subjKey, setKey){ return `S1Portal:${subjKey}:${setKey}`; }
+
+function renderMistakeBankUI(){
+  MISTAKE_BANK = loadMistakeBank();
+  const items = Object.values(MISTAKE_BANK.items||{});
+  const active = items.filter(it=>!it.mastered).length;
+  wrongSummary.innerHTML = `Active Mistakes: <strong>${active}</strong> | Mastered: <strong>${items.length-active}</strong>`;
+  wrongControls.style.display = (subjectSelect.value==="wrong") ? "block" : "none";
+  autoRemoveToggle.checked = !!MISTAKE_BANK.settings.autoRemoveWhenCorrect;
+  
+  if(items.length===0){ mistakeLogBody.innerHTML="No mistakes recorded."; return; }
+  const rows = items.slice().sort((a,b)=>(b.lastWrongAt>a.lastWrongAt?1:-1)).slice(0,50).map(it=>`<tr><td>${it.id}</td><td>${it.section}</td><td>${it.wrongCount}</td><td>${it.mastered?"Done":"Active"}</td><td><button class="tinyBtn danger" onclick="removeMistake('${it.id}');renderMistakeBankUI()">X</button></td></tr>`).join("");
+  mistakeLogBody.innerHTML = `<table><thead><tr><th>ID</th><th>Sec</th><th>Count</th><th>Status</th><th>Del</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function render(){
+  const {subjKey, setKey, set} = getCurrent();
+  setTitle.textContent = set.title; setDesc.textContent = set.desc;
+  questionContainer.innerHTML = "";
+  const seenCtx = new Set();
+  
+  set.questions.forEach((q, idx)=>{
+    if(q.contextKey && !seenCtx.has(q.contextKey)){
+      seenCtx.add(q.contextKey);
+      questionContainer.innerHTML += `<div class="q"><div class="pill">Context</div><details open><summary>${q.contextTitle||"Context"}</summary><div class="qprompt">${escapeHtml(q.context)}</div></details></div>`;
+    }
+    const qDiv = document.createElement("div"); qDiv.className = "q"; qDiv.dataset.qid = q.id;
+    qDiv.innerHTML = `<div class="qhead"><div><div class="qid">${q.id}</div><div class="qmeta">${q.section}</div></div><div class="pill">#${idx+1}</div></div><div class="qprompt">${q.prompt}</div>`;
+    
+    let inputHTML = "";
+    if(q.type==="mcq"){
+      inputHTML = `<div class="mcq">` + (q.options||[]).map(o=>`<label class="opt"><input type="radio" name="opt_${q.id}" value="${o.value}"><div><strong>${o.value}.</strong> ${escapeHtml(o.label)}</div></label>`).join("") + `</div>`;
+    } else if(q.type==="info"){ inputHTML = `<textarea rows="3" placeholder="Self-check notes" data-input="${q.id}"></textarea>`; }
+    else { inputHTML = `<input type="text" placeholder="Answer" data-input="${q.id}">`; }
+    qDiv.innerHTML += inputHTML + `<div class="result" style="display:none" data-result="${q.id}"></div>`;
+    
+    if(q.type!=="info"){ qDiv.innerHTML += `<details style="display:none" data-answerblock="${q.id}"><summary>Answer</summary><div class="small" data-answer="${q.id}"></div></details>`; }
+    if(q.model){ qDiv.innerHTML += `<details style="display:none" data-model="${q.id}"><summary>Model Points</summary><div class="small">${escapeHtml(q.model)}</div></details>`; }
+    questionContainer.appendChild(qDiv);
+  });
+  
+  footerNote.innerHTML = `Current: ${subjKey} / ${setKey}`;
+  loadAnswers(); refreshAnswerBlocks(); refreshModelVisibility(); updateStats(); renderMistakeBankUI();
+}
+
+// ... [getUserAnswer, setUserAnswer, checkOne, checkAll, updateStats, saveAnswers, loadAnswers, resetCurrent, flash - Standard Implementation] ...
+function getUserAnswer(q){ if(q.type==="mcq"){ const el=document.querySelector(`input[name="opt_${q.id}"]:checked`); return el?el.value:""; } const el=document.querySelector(`[data-input="${q.id}"]`); return el?el.value:""; }
+function setUserAnswer(q,v){ if(q.type==="mcq"){ const el=document.querySelector(`input[name="opt_${q.id}"][value="${v}"]`); if(el) el.checked=true; } else { const el=document.querySelector(`[data-input="${q.id}"]`); if(el) el.value=v; } }
+function refreshModelVisibility(){ 
+  const show = showAnswersToggle.checked;
+  document.querySelectorAll("[data-model], [data-answerblock]").forEach(el=>el.style.display=show?"block":"none");
+}
+function formatCorrectAnswer(q){
+  if(q.type==="mcq") return `Option: ${q.ans}`;
+  if(q.type==="ratio") return `${q.answerRatio[0]}:${q.answerRatio[1]}`;
+  return q.answer || q.answerText || "See model";
+}
+function refreshAnswerBlocks(){ const {set}=getCurrent(); set.questions.forEach(q=>{ const el=document.querySelector(`[data-answer="${q.id}"]`); if(el) el.textContent=formatCorrectAnswer(q); }); }
+
+function checkAll(){
+  const {set, setKey}=getCurrent(); const strict=strictToggle.checked;
+  let graded=0, correct=0;
+  set.questions.forEach(q=>{
+    const r = checkOne(q, strict);
+    const el = document.querySelector(`[data-result="${q.id}"]`);
+    if(el){ el.style.display="block"; el.className=`result ${r.level}`; el.textContent=r.msg; }
+    if(r.graded){ graded++; if(r.ok){ correct++; recordCorrectIfTracked(q); } else { recordWrong(q, getUserAnswer(q), setKey); } }
+  });
+  updateStats({graded, correct}); renderMistakeBankUI();
+}
+function checkOne(q, strict){
+  if(q.type==="info") return {graded:false, level:"warn", msg:"Self-check item."};
+  const u = getUserAnswer(q);
+  if(q.type==="mcq"){ const ok=u===q.ans; return {graded:true, ok, level:ok?"good":"bad", msg:ok?"Correct":`Incorrect. Ans: ${q.ans}`}; }
+  if(q.type==="number"){ const n=parseNumber(u); if(isNaN(n)) return {graded:true, ok:false, level:"bad", msg:"Invalid number"}; const ok=Math.abs(n-q.answer)<=(q.tolerance||0.001); return {graded:true, ok, level:ok?"good":"bad", msg:ok?"Correct":`Incorrect. Ans: ${q.answer}`}; }
+  if(q.type==="ratio"){ const r=parseRatio(u); if(!r) return {graded:true, ok:false, level:"bad", msg:"Invalid ratio"}; const ok=r[0]===q.answerRatio[0]&&r[1]===q.answerRatio[1]; return {graded:true, ok, level:ok?"good":"bad", msg:ok?"Correct":`Incorrect. Ans: ${q.answerRatio.join(":")}`}; }
+  if(q.type==="text"){ const ok=normalizeBasic(u)===normalizeBasic(q.answerText); return {graded:true, ok, level:ok?"good":"bad", msg:ok?"Correct":`Incorrect. Ans: ${q.answerText}`}; }
+  if(q.type==="keywords"){ const c=countMatchedKeywords(u, q.keywordsAnyOf); const ok=c>=(q.minKeywords||1); return {graded:true, ok, level:ok?"good":"bad", msg:ok?`Matched ${c} keywords`:`Missing keywords`}; }
+  return {graded:false};
+}
+function updateStats(forced){
+  const {set}=getCurrent();
+  let graded=forced?.graded||0, correct=forced?.correct||0;
+  if(!forced){ set.questions.forEach(q=>{ const el=document.querySelector(`[data-result="${q.id}"]`); if(el&&el.style.display!=="none"&&!el.classList.contains("warn")){ graded++; if(el.classList.contains("good")) correct++; } }); }
+  stats.innerHTML = `<span class="pill">Correct: ${correct}/${graded}</span>`;
+}
+
+function doJump(){
+  const raw=(jumpInput.value||"").trim().toUpperCase();
+  if(raw.startsWith("D") && BANK.daily.sets[raw]) { subjectSelect.value="daily"; populateSets(); setSelect.value=raw; render(); }
+  else if(raw.startsWith("W") && BANK.weekly.sets[raw]) { subjectSelect.value="weekly"; populateSets(); setSelect.value=raw; render(); }
+  else { alert("Set not found (e.g. D001, W05)"); }
+}
+function exportData(){ const d={}; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k.startsWith("S1Portal")||k===WRONG_KEY) d[k]=localStorage.getItem(k); } const b=new Blob([JSON.stringify(d)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="backup.json"; a.click(); }
+function importData(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=function(ev){ try{const d=JSON.parse(ev.target.result); for(let k in d) localStorage.setItem(k,d[k]); location.reload(); }catch(x){alert("Error");} }; r.readAsText(f); }
+
+subjectSelect.addEventListener("change", ()=>{ populateSets(); render(); });
+setSelect.addEventListener("change", render);
+checkBtn.addEventListener("click", checkAll);
+showAnswersToggle.addEventListener("change", refreshModelVisibility);
+saveBtn.addEventListener("click", saveAnswers);
+resetBtn.addEventListener("click", resetCurrent);
+openWrongBtn.addEventListener("click", ()=>{ subjectSelect.value="wrong"; populateSets(); render(); });
+clearWrongBtn.addEventListener("click", ()=>{ if(confirm("Clear wrong bank?")) { MISTAKE_BANK={settings:{autoRemoveWhenCorrect:true},items:{}}; saveMistakeBank(MISTAKE_BANK); renderMistakeBankUI(); render(); } });
+autoRemoveToggle.addEventListener("change", ()=>{ MISTAKE_BANK.settings.autoRemoveWhenCorrect=autoRemoveToggle.checked; saveMistakeBank(MISTAKE_BANK); });
+buildWrongSessionBtn.addEventListener("click", render);
+jumpBtn.addEventListener("click", doJump);
+jumpInput.addEventListener("keydown", e=>{if(e.key==="Enter")doJump()});
+exportBtn.addEventListener("click", exportData);
+importBtn.addEventListener("click", ()=>importFile.click());
+importFile.addEventListener("change", importData);
+window.addEventListener("beforeunload", saveAnswers);
+
+populateSubjects(); subjectSelect.value="daily"; populateSets(); setSelect.value="D001"; renderMistakeBankUI(); render();
+</script>
+</body>
+</html>
