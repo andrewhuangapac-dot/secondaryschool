@@ -137,6 +137,10 @@
       border-bottom-color: rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);
       padding:2px 6px;border-radius:8px;color:#dbe2f3;
     }
+    .saved-badge{
+      font-size:10px;padding:2px 6px;border-radius:4px;border:1px solid rgba(255,92,92,0.45);
+      background:rgba(255,92,92,0.1);color:#ffe2e2;margin-left:8px;font-weight:bold;
+    }
     details{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:10px;background:rgba(255,255,255,0.02);}
     summary{cursor:pointer;color:#dbe2f3;font-weight:900;}
     table{width:100%;border-collapse:collapse;margin-top:8px;}
@@ -227,8 +231,12 @@
       <div class="small" id="wrongSummary">Loading…</div>
       
       <div class="row" style="margin-top:10px;">
-        <button class="btn secondary" id="openWrongBtn">Open Wrong Review</button>
-        <button class="btn danger" id="clearWrongBtn">Clear Wrong Bank</button>
+        <button class="btn secondary" id="openWrongBtn">Review Mistakes</button>
+        <!-- NEW: Email Button -->
+        <button class="btn" id="emailReportBtn">Email Report</button>
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <button class="btn danger" id="clearWrongBtn">Clear Bank</button>
       </div>
 
       <div id="wrongControls" style="display:none; margin-top:10px;">
@@ -266,8 +274,8 @@
           <ol>
             <li><strong>Levels:</strong> Math/Science (G1 Practical), Eng/Chi (G2 Academic).</li>
             <li>Use <span class="kbd">Daily Papers</span> for short daily practice.</li>
-            <li>Click <span class="kbd">Check Answers</span> to record mistakes.</li>
-            <li>Use <span class="kbd">Wrong Review</span> to practice weaknesses.</li>
+            <li>Click <span class="kbd">Check Answers</span> to record mistakes automatically.</li>
+            <li>Use <span class="kbd">Email Report</span> to send a record of errors.</li>
           </ol>
         </div>
       </details>
@@ -1002,6 +1010,7 @@ const resetBtn = document.getElementById("resetBtn");
 const footerNote = document.getElementById("footerNote");
 const openWrongBtn = document.getElementById("openWrongBtn");
 const clearWrongBtn = document.getElementById("clearWrongBtn");
+const emailReportBtn = document.getElementById("emailReportBtn");
 const wrongSummary = document.getElementById("wrongSummary");
 const wrongControls = document.getElementById("wrongControls");
 const buildWrongSessionBtn = document.getElementById("buildWrongSessionBtn");
@@ -1091,7 +1100,16 @@ function checkAll(){
   set.questions.forEach(q=>{
     const r = checkOne(q, strict);
     const el = document.querySelector(`[data-result="${q.id}"]`);
-    if(el){ el.style.display="block"; el.className=`result ${r.level}`; el.textContent=r.msg; }
+    if(el){ 
+      el.style.display="block"; 
+      el.className=`result ${r.level}`; 
+      // Add Visual Cue for auto-saving
+      if(r.graded && !r.ok) {
+        el.innerHTML = `${r.msg} <span class="saved-badge">Saved to Bank</span>`;
+      } else {
+        el.textContent = r.msg; 
+      }
+    }
     if(r.graded){ graded++; if(r.ok){ correct++; recordCorrectIfTracked(q); } else { recordWrong(q, getUserAnswer(q), setKey); } }
   });
   updateStats({graded, correct}); renderMistakeBankUI();
@@ -1111,6 +1129,35 @@ function updateStats(forced){
   let graded=forced?.graded||0, correct=forced?.correct||0;
   if(!forced){ set.questions.forEach(q=>{ const el=document.querySelector(`[data-result="${q.id}"]`); if(el&&el.style.display!=="none"&&!el.classList.contains("warn")){ graded++; if(el.classList.contains("good")) correct++; } }); }
   stats.innerHTML = `<span class="pill">Correct: ${correct}/${graded}</span>`;
+}
+
+// EMAIL REPORT LOGIC
+function emailMistakeReport(){
+  const items = Object.values(MISTAKE_BANK.items || {}).filter(it=>!it.mastered);
+  if(items.length === 0){ alert("No active mistakes to report."); return; }
+  
+  const date = new Date().toLocaleDateString();
+  let body = `S1 Practice Portal - Mistake Report (${date})\n\n`;
+  body += `Total Active Mistakes: ${items.length}\n\n`;
+  
+  // Include top 20 latest mistakes
+  const sorted = items.sort((a,b) => (b.lastWrongAt > a.lastWrongAt ? 1 : -1)).slice(0, 20);
+  
+  sorted.forEach((it, idx) => {
+    const q = it.snapshot;
+    body += `${idx+1}. [${q.section}] ${q.prompt}\n`;
+    body += `   Your Answer: ${it.lastUserAnswer || "(Empty)"}\n`;
+    if(q.type === 'mcq') body += `   Correct: ${q.answer}\n`;
+    else if(q.answerText) body += `   Correct: ${q.answerText}\n`;
+    else if(q.answer) body += `   Correct: ${q.answer}\n`;
+    body += `   (Wrong Count: ${it.wrongCount})\n\n`;
+  });
+  
+  if(items.length > 20) body += `... and ${items.length - 20} more items.\n`;
+  
+  const subject = encodeURIComponent(`S1 Mistake Report - ${date}`);
+  const mailBody = encodeURIComponent(body);
+  window.location.href = `mailto:?subject=${subject}&body=${mailBody}`;
 }
 
 // Missing functions restored here:
@@ -1184,6 +1231,7 @@ exportBtn.addEventListener("click", exportData);
 importBtn.addEventListener("click", ()=>importFile.click());
 importFile.addEventListener("change", importData);
 window.addEventListener("beforeunload", saveAnswers);
+emailReportBtn.addEventListener("click", emailMistakeReport);
 
 populateSubjects(); subjectSelect.value="daily"; populateSets(); setSelect.value="D001"; renderMistakeBankUI(); render();
 </script>
